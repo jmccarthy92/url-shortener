@@ -1,0 +1,53 @@
+services:
+  redis:
+    image: redis/redis-stack
+    ports: 
+      - 6379:6379
+      - 8001:8001 # for RedisInsight
+  cosmos:
+    container_name: cosmosdb
+    image: "mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator"
+    tty: true
+    restart: always
+    mem_limit: 2G
+    cpu_count: 2
+    environment:
+      AZURE_COSMOS_EMULATOR_PARTITION_COUNT: 1
+      AZURE_COSMOS_EMULATOR_ENABLE_DATA_PERSISTENCE: 'true'
+      AZURE_COSMOS_EMULATOR_ARGS: '/alternativenames=cosmosdb'
+    ports:
+       - "8081:8081"
+       - "8900:8900"
+       - "8901:8901"
+       - "8979:8979"
+       - "10250:10250"
+       - "10251:10251"
+       - "10252:10252"
+       - "10253:10253"
+       - "10254:10254"
+       - "10255:10255"
+       - "10256:10256"
+       - "10350:10350"
+    volumes:
+       - vol_cosmos:/data/db
+  dev:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      AZURE_COSMOS_DB_NAME: 'shortenedurl'
+      AZURE_COSMOS_DB_ENDPOINT: https://cosmosdb:8081
+      AZURE_COSMOS_DB_KEY: 'C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=='
+      # This is the publicly documented emulator key
+    ports:
+      - 3000:3000
+    volumes:
+      - ./:/app
+    depends_on:
+      - redis
+      - cosmos
+
+volumes:
+    vol_cosmos:   
